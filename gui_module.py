@@ -18,7 +18,10 @@ class LogWatcherGUI:
     def create_widgets(self):
         # Überschrift / Status
         self.label = tk.Label(self.root, text="Echtzeit Log-Überwachung", font=("Arial", 12, "bold"))
-        self.label.pack(pady=5)
+        self.label.pack(pady=(5, 0))
+
+        self.status_label = tk.Label(self.root, text="Starte Überwachung ...", anchor="w")
+        self.status_label.pack(fill="x", padx=10)
 
         # Textfeld für Log-Ausgabe (mit Scrollbalken)
         self.log_display = scrolledtext.ScrolledText(self.root, wrap=tk.WORD, state='disabled', bg="#1e1e1e", fg="#d4d4d4", font=("Courier", 10))
@@ -35,6 +38,9 @@ class LogWatcherGUI:
         self.log_display.insert(tk.END, text + "\n", level)
         self.log_display.yview(tk.END)  # Automatisch nach unten scrollen
         self.log_display.config(state='disabled')
+
+    def set_status(self, text):
+        self.status_label.config(text=text)
 
     def on_close(self):
         """Beendet den Hintergrund-Worker beim Schließen des Fensters."""

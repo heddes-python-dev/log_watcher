@@ -2,7 +2,11 @@
 import queue
 import threading
 import tkinter as tk
-from config import LOG_FILE_PATH, KEYWORDS
+import sys
+import traceback
+from pathlib import Path
+from tkinter import messagebox
+from config import LOG_FILE_PATHS, KEYWORDS
 from file_watcher import MultiFileWatcher as FileWatcher
 from filter_module import analyze_line
 from gui_module import LogWatcherGUI
@@ -14,7 +18,11 @@ class LogWatcherApp:
         self.log_queue = queue.Queue()
         
         # Watcher initialisieren
-        self.watcher = FileWatcher(LOG_FILE_PATH, self.on_new_line)
+        self.watcher = FileWatcher(
+            LOG_FILE_PATHS,
+            self.on_new_line,
+            self.on_watcher_status,
+        )
         
         # GUI initialisieren
         self.gui = LogWatcherGUI(self.root, self.stop_app)
@@ -25,6 +33,9 @@ class LogWatcherApp:
 
         # Regelmäßiges Prüfen der Queue starten (Polling im Tkinter-Hauptthread)
         self.root.after(100, self.process_queue)
+
+        for path in LOG_FILE_PATHS:
+            self.gui.append_log(f"Überwachung gestartet: {path}")
 
     def on_new_line(self, line):
         """Callback vom FileWatcher, wenn eine Zeile reinkommt."""
@@ -44,12 +55,34 @@ class LogWatcherApp:
         # Nach 100ms erneut aufrufen
         self.root.after(100, self.process_queue)
 
+    def on_watcher_status(self, status):
+        self.root.after(0, self.gui.set_status, status)
+
     def stop_app(self):
         self.watcher.stop()
 
     def run(self):
         self.root.mainloop()
 
+def _write_startup_error(error):
+    if getattr(sys, "frozen", False):
+        error_path = Path(sys.executable).resolve().with_name("log_watcher_error.log")
+    else:
+        error_path = Path(__file__).resolve().with_name("log_watcher_error.log")
+    error_path.write_text(traceback.format_exc(), encoding="utf-8")
+    return error_path
+
+
 if __name__ == "__main__":
-    app = LogWatcherApp()
-    app.run()
+    try:
+        app = LogWatcherApp()
+        app.run()
+    except Exception as error:
+        error_path = _write_startup_error(error)
+        try:
+            messagebox.showerror(
+                "Log Watcher konnte nicht gestartet werden",
+                f"{error}\n\nDetails: {error_path}",
+            )
+        except tk.TclError:
+            pass

@@ -32,10 +32,12 @@ Er liest die Logdateien dieser beiden Tools kontinuierlich aus und fasst relevan
 
 ## Verwendete Logdateien
 
-Standardmäßig werden folgende Dateien überwacht:
+Der Watcher sucht nach den Logs in den Projektordnern der beiden Monitore. Dabei werden sowohl die normalen Pfade als auch die `dist/`-Pfade der EXE-Versionen berücksichtigt:
 
 - .../system_monitor/system_monitor.log
+- .../system_monitor/dist/system_monitor.log
 - .../netzwerk_monitor/netzwerk_monitor.log
+- .../netzwerk_monitor/dist/netzwerk_monitor.log
 
 Die Pfade sind in [config.py](config.py) konfigurierbar.
 
@@ -48,17 +50,48 @@ Die Pfade sind in [config.py](config.py) konfigurierbar.
 - [gui_module.py](gui_module.py): Benutzeroberfläche
 - [popup_module.py](popup_module.py): Warnfenster für kritische Einträge
 
-## Starten
+## Starten mit Python
 
-1. In das Projektverzeichnis wechseln:
-   ```bash
-   cd .../log_watcher
-   ```
+Linux:
 
-2. Anwendung starten:
-   ```bash
-   python main.py
-   ```
+```bash
+cd .../log_watcher
+python3 main.py
+```
+
+Windows PowerShell:
+
+```powershell
+cd ...\log_watcher
+python main.py
+```
+
+## Starten mit PyInstaller
+
+Die fertige Anwendung liegt nach dem Build in `dist/`:
+
+- Linux: `dist/main`
+- Windows: `dist/main.exe`
+
+Die EXE muss auf dem jeweiligen Zielsystem gebaut werden. Dazu im Projektverzeichnis ausführen:
+
+Linux:
+
+```bash
+python3 -m pip install pyinstaller
+python3 -m PyInstaller --clean --noconfirm main.spec
+./dist/main
+```
+
+Windows PowerShell:
+
+```powershell
+python -m pip install pyinstaller
+python -m PyInstaller --clean --noconfirm main.spec
+.\dist\main.exe
+```
+
+Der Log-Watcher sollte gestartet werden, nachdem die Monitor-Anwendungen laufen. Angezeigt werden neue Logzeilen ab dem Start des Watchers.
 
 ## Beispielausgabe
 
